@@ -1,7 +1,23 @@
 <?php
 
+require APPPATH . '/libraries/JWT.php';
+require APPPATH . '/libraries/Key.php';
+require APPPATH . '/libraries/ExpiredException.php';
+require APPPATH . '/libraries/BeforeValidException.php';
+require APPPATH . '/libraries/SignatureInvalidException.php';
+require APPPATH . '/libraries/JWK.php';
+
+use \Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
 class REST_Controller extends CI_Controller
 {
+    protected function configToken()
+    {
+        $cnf['exp'] = 3600; //milisecond
+        $cnf['secretkey'] = 'jk5kn6k4kU4kkm5njN6gfldex0xTmk13AccfvfelR';
+        return $cnf;
+    }
 
     protected $_supported_formats = [
         'json' => 'application/json',
@@ -64,6 +80,41 @@ class REST_Controller extends CI_Controller
         header("Access-Control-Allow-Credentials: true");
         header("Access-Control-Max-Age: 86400"); //cache 1 day
         header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    }
+
+    protected function checkToken()
+    {
+        $secret_key = $this->configToken()['secretkey']; 
+        $key = new Key($secret_key, 'HS256');
+        $authHeader = $this->input->request_headers(); 
+        if (!$authHeader["Token"]) {
+            $this->response([
+                'success' => false,
+                'message' => 'token not must be filled',
+            ], 400);
+            die();
+        } 
+        $token = $authHeader["Token"]; 
+        if ($token) {
+            try {
+                $decoded = JWT::decode($token, $key);
+                if ($decoded) {
+                    return true;
+                }
+            } catch (\Exception$e) {
+                $this->response([
+                    'success' => false,
+                    'message' => 'token not valid',
+                ], 400);
+			    die();
+            }
+        } else {
+            $this->response([
+                'success' => false,
+                'message' => 'token Error',
+            ], 400);
+            die();
+        }
     }
 
 }
