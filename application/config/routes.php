@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 $route['default_controller'] = 'welcome';
 
-$route['auth/registration']['POST'] = 'auth/submitregistration';
+$route['auth/register']['POST'] = 'auth/submitregistration';
 $route['auth/login']['POST'] = 'auth/getlogin';
 
 $route['waservices/send/single']['POST'] = 'wa_services/single';

@@ -8,11 +8,46 @@ class auth extends REST_Controller
 {
     public function submitregistration()
     {
-        # code...
+        $error = [];
+        if (!$this->getPost('username')) {
+            $error[] = 'username must be filled';
+        }
+
+        if (!$this->getPost('password')) {
+            $error[] = 'password must be filled';
+        }
+
+        if (count($error) > 0) {
+            $this->response([
+                'success' => false,
+                'message' => $error,
+            ], 400);
+        }
+        
+        $this->response([
+            'success' => true,
+            'message' => "registration succeed",
+        ], 200);
     }
-    
+
     public function getlogin()
     {
+        $error = [];
+        if (!$this->getPost('username')) {
+            $error[] = 'username must be filled';
+        }
+
+        if (!$this->getPost('password')) {
+            $error[] = 'password must be filled';
+        }
+
+        if (count($error) > 0) {
+            $this->response([
+                'success' => false,
+                'message' => $error,
+            ], 400);
+        }
+
         $exp = time() + 3600;
         $token = array(
             "iss" => 'apprestservice',
@@ -28,12 +63,13 @@ class auth extends REST_Controller
 
         $jwt = JWT::encode($token, $this->configToken()['secretkey'], 'HS256');
         $output = [
-            'status' => 200,
-            'message' => 'Berhasil login',
             "token" => $jwt,
             "expireAt" => $token['exp'],
         ];
-        $data = array('kode' => '200', 'pesan' => 'token', 'data' => array('token' => $jwt, 'exp' => $exp));
-        $this->response($data, 200);
+        $this->response([
+            'success' => true,
+            'message' => "login succeed",
+            'data'    => $output
+        ], 200);
     }
 }
