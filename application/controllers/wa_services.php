@@ -2,10 +2,14 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 class wa_services extends REST_Controller
-{
+{   
+    var $baseUrl;
+    var $waToken;
 	public function __construct() {
         parent::__construct();
 		$this->checkToken();
+        $this->baseUrl = 'https://api-whatsapp.kata.ai/v1';
+        $this->waToken = 'mwemfooepfwpfpofmo22fmp2o3f2pfmofpo3fmpp23kdfpok3';
     }
 
     public function generateToken()
@@ -53,9 +57,8 @@ class wa_services extends REST_Controller
 
     public function curlPostRequest($endPoint, $postData)
     {
-        $watoken = 'mwemfooepfwpfpofmo22fmp2o3f2pfmofpo3fmpp23kdfpok3';
-        $baseUrl = 'https://api-whatsapp.kata.ai/v1';
-        $url = $baseUrl.'/'.$endPoint;
+        $url = $this->baseUrl.'/'.$endPoint;
+        $token = $this->waToken;
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, true);
@@ -63,7 +66,7 @@ class wa_services extends REST_Controller
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: '.$watoken,
+            'Authorization: '.$token,
         ));
         $result = curl_exec($curl);
         curl_close($curl);
@@ -73,9 +76,8 @@ class wa_services extends REST_Controller
 
     public function curlPostFormDataRequest($endPoint, $postData)
     {
-        $watoken = 'mwemfooepfwpfpofmo22fmp2o3f2pfmofpo3fmpp23kdfpok3';
-        $baseUrl = 'https://api-whatsapp.kata.ai/v1';
-        $url = $baseUrl.'/'.$endPoint;
+        $url = $this->baseUrl.'/'.$endPoint;
+        $token = $this->waToken;
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, true);
@@ -83,7 +85,7 @@ class wa_services extends REST_Controller
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'Content-Type: multipart/form-data',
-            'Authorization: '.$watoken,
+            'Authorization: '.$token,
         ));
         $result = curl_exec($curl);
         curl_close($curl);
