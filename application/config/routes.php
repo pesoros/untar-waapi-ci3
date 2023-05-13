@@ -6,6 +6,9 @@ $route['default_controller'] = 'welcome';
 $route['auth/register']['POST'] = 'auth/submitregistration';
 $route['auth/login']['POST'] = 'auth/getlogin';
 
+$route['waservices/testdb']['GET'] = 'wa_services/testdbloc';
+
+$route['waservices/refreshtoken']['GET'] = 'wa_services/refreshToken';
 $route['waservices/send/single']['POST'] = 'wa_services/single';
 
 $route['404_override'] = '';
