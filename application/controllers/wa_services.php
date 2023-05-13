@@ -3,71 +3,47 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class wa_services extends REST_Controller
 {   
-    var $baseUrl;
 	public function __construct() {
         parent::__construct();
 		// $this->checkToken();
         $this->load->model('WaModel');
-        $this->baseUrl = getenv('WAAPI_URL');
     }
 
-    public function testdbloc()
+    public function refreshToken($phoneName)
     {
-        $res = $this->WaModel->tetstDb();
+        $res = $this->generateToken($phoneName);
+        $data = $res['result'];
+        
+        $updateToken = $this->WaModel->rewriteToken($phoneName, $data['access_token'], $data['expires_in']);
 
         $this->response([
             'success' => true,
             'message' => 'refresh token success',
-            'data' => $res,
+            'data' => $updateToken,
         ], 200);
     }
 
-    public function refreshToken()
+    public function generateToken($phoneName)
     {
-        $res = $this->generateToken();
+        $getAuthData = $this->WaModel->getAuth($phoneName);
+        $postData["username"] = $getAuthData->username;
+        $postData["password"] = $getAuthData->password;
 
-        $this->response([
-            'success' => true,
-            'message' => 'refresh token success',
-            'data' => $res,
-        ], 200);
+        $requestNewToken = $this->curlPostRequest('users/login',$postData);
+
+        return $requestNewToken;
     }
 
-    public function generateToken()
+    public function single($phoneName, $number, $message)
     {
-        $postData["username"] = "untar-791d7b98";
-        $postData["password"] = "9wtSrUMvLExdsHhG";
-
-        $res = $this->curlPostRequest('users/login',$postData);
-
-        return $res;
-    }
-
-    public function single()
-    {
-        $error = [];
-        if (!$this->getPost('phone')) {
-            $error[] = 'phone must be filled';
-        }
-
-        if (!$this->getPost('message')) {
-            $error[] = 'message must be filled';
-        }
-
-        if (count($error) > 0) {
-            $this->response([
-                'success' => false,
-                'message' => $error,
-            ], 400);
-        }
-
-        $postData["to"] = "628123456789";
+        $postData["to"] = $number;
         $postData["recipient_type"] = "individual";
         $postData["type"] = "text";
-        $postData["text"]['body'] = "some text to be sent";
+        $postData["text"]['body'] = $message;
         $postData["preview_url"] = false;
+        $getToken = $this->WaModel->getToken($phoneName);
 
-        $res = $this->curlPostRequest('messages',$postData, $this->waToken);
+        $res = $this->curlPostRequest('messages',$postData, $getToken->token);
 
         $this->response([
             'success' => true,
@@ -78,10 +54,10 @@ class wa_services extends REST_Controller
 
     public function curlPostRequest($endPoint, $postData, $token = null)
     {
-        $url = $this->baseUrl.'/'.$endPoint;
+        $url = getenv('WAAPI_URL').'/'.$endPoint;
         $header[] = 'Content-Type: application/json';
         if ($token) {
-            $header[] = 'Authorization: '.$token;
+            $header[] = 'Authorization: Bearer '.$token;
         }
 
         $curl = curl_init($url);
@@ -90,8 +66,12 @@ class wa_services extends REST_Controller
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
         $result = curl_exec($curl);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
         $result = json_decode($result, true);
-        return $result;
+
+        $res['statusCode'] = $statusCode;
+        $res['result'] = $result;
+        return $res;
     }
 }

@@ -6,10 +6,8 @@ $route['default_controller'] = 'welcome';
 $route['auth/register']['POST'] = 'auth/submitregistration';
 $route['auth/login']['POST'] = 'auth/getlogin';
 
-$route['waservices/testdb']['GET'] = 'wa_services/testdbloc';
-
-$route['waservices/refreshtoken']['GET'] = 'wa_services/refreshToken';
-$route['waservices/send/single']['POST'] = 'wa_services/single';
+$route['wa/refreshtoken/(:any)']['GET'] = 'wa_services/refreshToken/$1';
+$route['wa/single/(:any)/(:any)/(:any)']['GET'] = 'wa_services/single/$1/$2/$3';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
