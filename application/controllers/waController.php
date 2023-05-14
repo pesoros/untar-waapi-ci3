@@ -58,6 +58,7 @@ class waController extends REST_Controller
     public function bulkSending($flag)
     {
         $getBulkData = $this->WaModel->getBulkData($flag);
+        $exportCsv = $this->exportCsv($flag, $getBulkData);
 
         $this->response([
             'success' => true,
@@ -122,4 +123,70 @@ class waController extends REST_Controller
         $res['result'] = $result;
         return $res;
     }
+
+    public function getAlphabet($index)
+    {
+        $alphabet[0] = 'A';
+        $alphabet[1] = 'B';
+        $alphabet[2] = 'C';
+        $alphabet[3] = 'D';
+        $alphabet[4] = 'E';
+        $alphabet[5] = 'F';
+        $alphabet[6] = 'G';
+        $alphabet[7] = 'H';
+        $alphabet[8] = 'I';
+        $alphabet[9] = 'J';
+        $alphabet[10] = 'K';
+        $alphabet[11] = 'L';
+        $alphabet[12] = 'M';
+        $alphabet[13] = 'N';
+        $alphabet[14] = 'O';
+        $alphabet[16] = 'P';
+        $alphabet[17] = 'Q';
+        $alphabet[18] = 'R';
+        $alphabet[19] = 'S';
+        $alphabet[20] = 'T';
+        $alphabet[21] = 'U';
+        $alphabet[22] = 'V';
+        $alphabet[23] = 'W';
+        $alphabet[24] = 'X';
+        $alphabet[25] = 'Y';
+        $alphabet[26] = 'Z';
+
+        return $alphabet[$index];
+    }
+
+    public function exportCsv($flag, $exportCsvData){
+        include BASEPATH.'PHPExcel/PHPExcel.php';
+        
+        $bodyVariable = explode("|",$exportCsvData[0]->variable);
+
+        $csv = new PHPExcel();
+        $csv->setActiveSheetIndex(0)->setCellValue('A1', "phone_number");
+        $counter = 0;
+        foreach($bodyVariable as $index => $val){
+            $counter++;
+            $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counter)."1", "body".($index+1)."_type");
+            $counter++;
+            $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counter)."1", "body".($index+1)."_text");
+        }
+        $numrow = 2;
+        foreach($exportCsvData as $value){
+            $csv->setActiveSheetIndex(0)->setCellValue('A'.$numrow, $value->phone_number);
+            $counterValue = 0;
+            $bodyVariableVal = explode("|",$value->variable);
+            foreach($bodyVariableVal as $index => $val){
+                $counterValue++;
+                $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counterValue).$numrow, 'text');
+                $counterValue++;
+                $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counterValue).$numrow, $val);
+            }
+            $numrow++;
+        }
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'.$flag.random_int(10000000, 99999999).'.csv"'); // Set nama file excel nya
+        header('Cache-Control: max-age=0');
+        $write = new PHPExcel_Writer_CSV($csv);
+        $write->save('php://output');
+      }
 }
