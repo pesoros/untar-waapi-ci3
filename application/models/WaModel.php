@@ -28,16 +28,34 @@ class WaModel extends CI_Model
     return $query->row();
   }
 
-  public function rewriteToken($phoneName, $newToken, $expiresIn)
+  public function rewriteToken($phoneName, $data)
   {
-    $data = array(
-        'token' => $newToken,
-        'token_expires_in' => $expiresIn,
-        'token_updated_at' => date("Y-m-d H:i:s")
-    );
-
     $this->db->where('name', $phoneName);
     $this->db->update('wa_phone', $data);
+
+    return true;
+  }
+
+  public function getBulkData($flag)
+  {
+    $query = $this->db->query("
+        SELECT 
+        flag_id,
+        nim,
+        phone_number,
+        variable,
+        sent_at,
+        template
+        FROM wa_bulk
+        WHERE flag_id = '$flag'
+        AND status_code IS NULL
+    ");
+    return $query->result();
+  }
+
+  public function saveOtp($data)
+  {
+    $this->db->insert('otp',$data);
 
     return true;
   }

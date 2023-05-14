@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class wa_services extends REST_Controller
+class waController extends REST_Controller
 {   
 	public function __construct() {
         parent::__construct();
@@ -13,8 +13,11 @@ class wa_services extends REST_Controller
     {
         $res = $this->generateToken($phoneName);
         $data = $res['result'];
-        
-        $updateToken = $this->WaModel->rewriteToken($phoneName, $data['access_token'], $data['expires_in']);
+        $saveData['token'] = $data['access_token'];
+        $saveData['token_expires_in'] =  $data['expires_in'];
+        $saveData['token_updated_at'] = date("Y-m-d H:i:s");
+
+        $updateToken = $this->WaModel->rewriteToken($phoneName, $saveData);
 
         $this->response([
             'success' => true,
@@ -49,6 +52,51 @@ class wa_services extends REST_Controller
             'success' => true,
             'message' => 'sending message success',
             'data' => $res,
+        ], 200);
+    }
+
+    public function bulkSending($flag)
+    {
+        $getBulkData = $this->WaModel->getBulkData($flag);
+
+        $this->response([
+            'success' => true,
+            'message' => 'bulk sending message success',
+            'data' => $getBulkData,
+        ], 200);
+    }
+
+    public function otp($category, $phoneNumber)
+    {
+        $minuteExpired = getenv('OTP_MINUTE_EXPIRES');
+        $otp = random_int(100000, 999999);
+        $dateNow = date("Y-m-d H:i:s");
+        $expiredDate = date("Y-m-d H:i:s",strtotime(date("Y-m-d H:i:s")." +$minuteExpired minutes"));
+
+        $dataToInsert['category'] = $category;
+        $dataToInsert['phone_number'] = $phoneNumber;
+        $dataToInsert['code'] = $otp;
+        $dataToInsert['status'] = 'WAITING';
+        $dataToInsert['created_at'] = $dateNow;
+        $dataToInsert['expired_at'] = $expiredDate;
+
+        $saveOtp = $this->WaModel->saveOtp($dataToInsert);
+
+        $this->response([
+            'success' => true,
+            'message' => 'sending otp success',
+            'data' => $dataToInsert,
+        ], 200);
+    }
+
+    public function singleTemplate()
+    {
+        $parameters = $this->input->get();
+
+        $this->response([
+            'success' => true,
+            'message' => 'sending message success',
+            'data' => $parameters,
         ], 200);
     }
 
