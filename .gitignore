@@ -30,5 +30,7 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 *.sublime-project
 /tests/tests/
 /tests/results/
+
+assets/bulkcsv/*
 .env.development
 .env.production

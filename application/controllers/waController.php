@@ -59,11 +59,14 @@ class waController extends REST_Controller
     {
         $getBulkData = $this->WaModel->getBulkData($flag);
         $exportCsv = $this->exportCsv($flag, $getBulkData);
+        $res['total_user'] = COUNT($getBulkData);
+        $res['filename'] = $exportCsv;
+        $res['fileurl'] = base_url(getenv('BULK_DIRECTORY').'/'.$exportCsv);
 
         $this->response([
             'success' => true,
             'message' => 'bulk sending message success',
-            'data' => $getBulkData,
+            'data' => $res,
         ], 200);
     }
 
@@ -158,7 +161,6 @@ class waController extends REST_Controller
 
     public function exportCsv($flag, $exportCsvData){
         include BASEPATH.'PHPExcel/PHPExcel.php';
-        
         $bodyVariable = explode("|",$exportCsvData[0]->variable);
 
         $csv = new PHPExcel();
@@ -183,10 +185,11 @@ class waController extends REST_Controller
             }
             $numrow++;
         }
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="'.$flag.random_int(10000000, 99999999).'.csv"'); // Set nama file excel nya
-        header('Cache-Control: max-age=0');
         $write = new PHPExcel_Writer_CSV($csv);
-        $write->save('php://output');
+        $dateFileName = date("YmdHis");
+        $filename = $flag.'-'.$dateFileName.random_int(100, 999).'.csv';
+        $write->save(getenv('BULK_DIRECTORY').'/'.$filename);
+
+        return $filename;
       }
 }
