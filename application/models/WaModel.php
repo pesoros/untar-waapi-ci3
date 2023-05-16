@@ -45,7 +45,8 @@ class WaModel extends CI_Model
         phone_number,
         variable,
         sent_at,
-        template
+        template,
+        phone_sender_name
         FROM wa_bulk
         WHERE flag_id = '$flag'
         AND status_code IS NULL

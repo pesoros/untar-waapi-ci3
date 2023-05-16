@@ -44,9 +44,8 @@ class waController extends REST_Controller
         $postData["type"] = "text";
         $postData["text"]['body'] = $message;
         $postData["preview_url"] = false;
-        $getToken = $this->WaModel->getToken($phoneName);
 
-        $res = $this->curlPostRequest('messages',$postData, $getToken->token);
+        $res = $this->curlPostRequest('messages',$postData, $phoneName);
 
         $this->response([
             'success' => true,
@@ -55,7 +54,7 @@ class waController extends REST_Controller
         ], 200);
     }
 
-    public function bulkSending($flag)
+    public function bulkSendingFile($flag)
     {
         $getBulkData = $this->WaModel->getBulkData($flag);
         $exportCsv = $this->exportCsv($flag, $getBulkData);
@@ -67,6 +66,37 @@ class waController extends REST_Controller
             'success' => true,
             'message' => 'bulk sending message success',
             'data' => $res,
+        ], 200);
+    }
+
+    public function bulkSending($flag)
+    {
+        $getBulkData = $this->WaModel->getBulkData($flag);
+        $test = [];
+        foreach ($getBulkData as $key => $value) {
+            $bodyVariable = explode("|",$value->variable);
+            $postData = [];
+
+            $postData['to'] = $value->phone_number;
+            $postData['type'] = 'template';
+            $postData['template']['name'] = $value->template;
+            $postData['template']['language']['policy'] = 'deterministic';
+            $postData['template']['language']['code'] = 'id';
+            $postData['template']['components'][0]['type'] = 'body';
+            foreach ($bodyVariable as $varKey => $varValue) {
+                $postData['template']['components'][0]['parameters'][$varKey]['type'] = 'text';
+                $postData['template']['components'][0]['parameters'][$varKey]['text'] = STRVAL($varValue);
+            }
+            $requestMessage = $this->curlPostRequest('messages', $postData, $value->phone_sender_name);
+            if (($key+1) === COUNT($getBulkData)) {
+                sleep(2);
+            }
+        }
+
+        $this->response([
+            'success' => true,
+            'message' => 'bulk sending message success',
+            'data' => $getBulkData,
         ], 200);
     }
 
@@ -84,12 +114,23 @@ class waController extends REST_Controller
         $dataToInsert['created_at'] = $dateNow;
         $dataToInsert['expired_at'] = $expiredDate;
 
+        $postData['to'] = $phoneNumber;
+        $postData['type'] = 'template';
+        $postData['template']['name'] = 'lintar_otp';
+        $postData['template']['language']['policy'] = 'deterministic';
+        $postData['template']['language']['code'] = 'id';
+        $postData['template']['components'][0]['type'] = 'body';
+        $postData['template']['components'][0]['parameters'][0]['type'] = 'text';
+        $postData['template']['components'][0]['parameters'][0]['text'] = STRVAL($otp);
+
+        $requestNewToken = $this->curlPostRequest('messages', $postData, 'phone_a');
+
         $saveOtp = $this->WaModel->saveOtp($dataToInsert);
 
         $this->response([
             'success' => true,
             'message' => 'sending otp success',
-            'data' => $dataToInsert,
+            'data' => $requestNewToken,
         ], 200);
     }
 
@@ -109,7 +150,8 @@ class waController extends REST_Controller
         $url = getenv('WAAPI_URL').'/'.$endPoint;
         $header[] = 'Content-Type: application/json';
         if ($token) {
-            $header[] = 'Authorization: Bearer '.$token;
+            $getToken = $this->WaModel->getToken($token);
+            $header[] = 'Authorization: Bearer '.$getToken->token;
         }
 
         $curl = curl_init($url);
