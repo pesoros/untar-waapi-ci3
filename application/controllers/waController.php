@@ -2,10 +2,11 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 class waController extends REST_Controller
-{   
-	public function __construct() {
+{
+    public function __construct()
+    {
         parent::__construct();
-		// $this->checkToken();
+        // $this->checkToken();
         $this->load->model('WaModel');
     }
 
@@ -14,7 +15,7 @@ class waController extends REST_Controller
         $res = $this->generateToken($phoneName);
         $data = $res['result'];
         $saveData['token'] = $data['access_token'];
-        $saveData['token_expires_in'] =  $data['expires_in'];
+        $saveData['token_expires_in'] = $data['expires_in'];
         $saveData['token_updated_at'] = date("Y-m-d H:i:s");
 
         $updateToken = $this->WaModel->rewriteToken($phoneName, $saveData);
@@ -32,7 +33,7 @@ class waController extends REST_Controller
         $postData["username"] = $getAuthData->username;
         $postData["password"] = $getAuthData->password;
 
-        $requestNewToken = $this->curlPostRequest('users/login',$postData);
+        $requestNewToken = $this->curlPostRequest('users/login', $postData);
 
         return $requestNewToken;
     }
@@ -45,7 +46,7 @@ class waController extends REST_Controller
         $postData["text"]['body'] = $message;
         $postData["preview_url"] = false;
 
-        $res = $this->curlPostRequest('messages',$postData, $phoneName);
+        $res = $this->curlPostRequest('messages', $postData, $phoneName);
 
         $this->response([
             'success' => true,
@@ -60,7 +61,7 @@ class waController extends REST_Controller
         $exportCsv = $this->exportCsv($flag, $getBulkData);
         $res['total_user'] = COUNT($getBulkData);
         $res['filename'] = $exportCsv;
-        $res['fileurl'] = base_url(getenv('BULK_DIRECTORY').'/'.$exportCsv);
+        $res['fileurl'] = base_url(getenv('BULK_DIRECTORY') . '/' . $exportCsv);
 
         $this->response([
             'success' => true,
@@ -74,7 +75,7 @@ class waController extends REST_Controller
         $getBulkData = $this->WaModel->getBulkData($flag);
         $test = [];
         foreach ($getBulkData as $key => $value) {
-            $bodyVariable = explode("|",$value->variable);
+            $bodyVariable = explode("|", $value->variable);
             $postData = [];
 
             $postData['to'] = $value->phone_number;
@@ -88,7 +89,7 @@ class waController extends REST_Controller
                 $postData['template']['components'][0]['parameters'][$varKey]['text'] = STRVAL($varValue);
             }
             $requestMessage = $this->curlPostRequest('messages', $postData, $value->phone_sender_name);
-            if (($key+1) === COUNT($getBulkData)) {
+            if (($key + 1) === COUNT($getBulkData)) {
                 sleep(2);
             }
         }
@@ -105,7 +106,7 @@ class waController extends REST_Controller
         $minuteExpired = getenv('OTP_MINUTE_EXPIRES');
         $otp = random_int(100000, 999999);
         $dateNow = date("Y-m-d H:i:s");
-        $expiredDate = date("Y-m-d H:i:s",strtotime(date("Y-m-d H:i:s")." +$minuteExpired minutes"));
+        $expiredDate = date("Y-m-d H:i:s", strtotime(date("Y-m-d H:i:s") . " +$minuteExpired minutes"));
 
         $dataToInsert['category'] = $category;
         $dataToInsert['phone_number'] = $phoneNumber;
@@ -145,30 +146,6 @@ class waController extends REST_Controller
         ], 200);
     }
 
-    public function curlPostRequest($endPoint, $postData, $token = null)
-    {
-        $url = getenv('WAAPI_URL').'/'.$endPoint;
-        $header[] = 'Content-Type: application/json';
-        if ($token) {
-            $getToken = $this->WaModel->getToken($token);
-            $header[] = 'Authorization: Bearer '.$getToken->token;
-        }
-
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($postData));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-        $result = curl_exec($curl);
-        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-        $result = json_decode($result, true);
-
-        $res['statusCode'] = $statusCode;
-        $res['result'] = $result;
-        return $res;
-    }
-
     public function getAlphabet($index)
     {
         $alphabet[0] = 'A';
@@ -201,37 +178,62 @@ class waController extends REST_Controller
         return $alphabet[$index];
     }
 
-    public function exportCsv($flag, $exportCsvData){
-        include BASEPATH.'PHPExcel/PHPExcel.php';
-        $bodyVariable = explode("|",$exportCsvData[0]->variable);
+    public function exportCsv($flag, $exportCsvData)
+    {
+        include BASEPATH . 'PHPExcel/PHPExcel.php';
+        $bodyVariable = explode("|", $exportCsvData[0]->variable);
 
         $csv = new PHPExcel();
         $csv->setActiveSheetIndex(0)->setCellValue('A1', "phone_number");
         $counter = 0;
-        foreach($bodyVariable as $index => $val){
+        foreach ($bodyVariable as $index => $val) {
             $counter++;
-            $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counter)."1", "body".($index+1)."_type");
+            $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counter) . "1", "body" . ($index + 1) . "_type");
             $counter++;
-            $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counter)."1", "body".($index+1)."_text");
+            $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counter) . "1", "body" . ($index + 1) . "_text");
         }
         $numrow = 2;
-        foreach($exportCsvData as $value){
-            $csv->setActiveSheetIndex(0)->setCellValue('A'.$numrow, $value->phone_number);
+        foreach ($exportCsvData as $value) {
+            $csv->setActiveSheetIndex(0)->setCellValue('A' . $numrow, $value->phone_number);
             $counterValue = 0;
-            $bodyVariableVal = explode("|",$value->variable);
-            foreach($bodyVariableVal as $index => $val){
+            $bodyVariableVal = explode("|", $value->variable);
+            foreach ($bodyVariableVal as $index => $val) {
                 $counterValue++;
-                $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counterValue).$numrow, 'text');
+                $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counterValue) . $numrow, 'text');
                 $counterValue++;
-                $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counterValue).$numrow, $val);
+                $csv->setActiveSheetIndex(0)->setCellValue($this->getAlphabet($counterValue) . $numrow, $val);
             }
             $numrow++;
         }
         $write = new PHPExcel_Writer_CSV($csv);
         $dateFileName = date("YmdHis");
-        $filename = $flag.'-'.$dateFileName.random_int(100, 999).'.csv';
-        $write->save(getenv('BULK_DIRECTORY').'/'.$filename);
+        $filename = $flag . '-' . $dateFileName . random_int(100, 999) . '.csv';
+        $write->save(getenv('BULK_DIRECTORY') . '/' . $filename);
 
         return $filename;
-      }
+    }
+
+    public function curlPostRequest($endPoint, $postData, $token = null)
+    {
+        $url = getenv('WAAPI_URL').'/'.$endPoint;
+        $header[] = 'Content-Type: application/json';
+        if ($token) {
+            $getToken = $this->WaModel->getToken($token);
+            $header[] = 'Authorization: Bearer '.$getToken->token;
+        }
+
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($postData));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
+        $result = curl_exec($curl);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $result = json_decode($result, true);
+
+        $res['statusCode'] = $statusCode;
+        $res['result'] = $result;
+        return $res;
+    }
 }
