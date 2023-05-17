@@ -12,13 +12,7 @@ class waController extends REST_Controller
 
     public function refreshToken($phoneName)
     {
-        $res = $this->generateToken($phoneName);
-        $data = $res['result'];
-        $saveData['token'] = $data['access_token'];
-        $saveData['token_expires_in'] = $data['expires_in'];
-        $saveData['token_updated_at'] = date("Y-m-d H:i:s");
-
-        $updateToken = $this->WaModel->rewriteToken($phoneName, $saveData);
+        $updateToken = $this->generateToken($phoneName);
 
         $this->response([
             'success' => true,
@@ -35,7 +29,14 @@ class waController extends REST_Controller
 
         $requestNewToken = $this->curlPostRequest('users/login', $postData);
 
-        return $requestNewToken;
+        $data = $requestNewToken['result'];
+        $saveData['token'] = $data['access_token'];
+        $saveData['token_expires_in'] = $data['expires_in'];
+        $saveData['token_updated_at'] = date("Y-m-d H:i:s");
+
+        $updateToken = $this->WaModel->rewriteToken($phoneName, $saveData);
+
+        return $updateToken;
     }
 
     public function single($phoneName, $number, $message)
@@ -74,8 +75,24 @@ class waController extends REST_Controller
                 $postData['template']['components'][0]['parameters'][$varKey]['text'] = STRVAL($varValue);
             }
             $requestMessage = $this->curlPostRequest('messages', $postData, $value->phone_sender_name);
+            
+            if ($requestMessage['statusCode'] === 401) {
+                $updateToken = $this->generateToken($phone_sender_name);
+                $requestMessage = $this->curlPostRequest('messages', $postData, $value->phone_sender_name);  
+            }
+            
+            $saveData['status_code'] = $requestMessage['statusCode'];
+            if ($requestMessage['statusCode'] === 201) {
+                $saveData['message_id'] = $requestMessage['result']['messages'][0]['id'];
+            } else if ($requestMessage['statusCode'] === 400) {
+                $saveData['error'] = $requestMessage['result']['errors'][0]['code'];
+                $saveData['message'] = $requestMessage['result']['errors'][0]['details'];
+            }
+
+            $updateBulkData = $this->WaModel->updateBulkData($value->recid, $saveData);
+
             if (($key + 1) === COUNT($getBulkData)) {
-                sleep(2);
+                sleep(1);
             }
         }
 
@@ -117,6 +134,7 @@ class waController extends REST_Controller
             'success' => true,
             'message' => 'sending otp success',
             'data' => $requestNewToken,
+            'dataraw' => $postData,
         ], 200);
     }
 

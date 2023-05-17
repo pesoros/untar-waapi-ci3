@@ -40,6 +40,7 @@ class WaModel extends CI_Model
   {
     $query = $this->db->query("
         SELECT 
+        recid,
         flag_id,
         nim,
         phone_number,
@@ -49,9 +50,17 @@ class WaModel extends CI_Model
         phone_sender_name
         FROM wa_bulk
         WHERE flag_id = '$flag'
-        AND status_code IS NULL
+        AND status_code != '201'
     ");
     return $query->result();
+  }
+
+  public function updateBulkData($recid, $data)
+  {
+    $this->db->where('recid', $recid);
+    $this->db->update('wa_bulk', $data);
+
+    return true;
   }
 
   public function saveOtp($data)
