@@ -110,12 +110,12 @@ class waController extends REST_Controller
         $dateNow = date("Y-m-d H:i:s");
         $expiredDate = date("Y-m-d H:i:s", strtotime(date("Y-m-d H:i:s") . " +$minuteExpired minutes"));
 
-        $dataToInsert['category'] = $category;
-        $dataToInsert['phone_number'] = $phoneNumber;
-        $dataToInsert['code'] = $otp;
-        $dataToInsert['status'] = 'WAITING';
+        $dataToInsert['no_hp'] = $phoneNumber;
+        $dataToInsert['otp'] = $otp;
+        $dataToInsert['jenis'] = $category;
         $dataToInsert['created_at'] = $dateNow;
         $dataToInsert['expired_at'] = $expiredDate;
+        $dataToInsert['status_otp'] = 'WAITING';
 
         $postData['to'] = $phoneNumber;
         $postData['type'] = 'template';

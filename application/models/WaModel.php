@@ -6,7 +6,7 @@ class WaModel extends CI_Model
   {
     $query = $this->db->query("
         SELECT 
-        wp.name as phone_name,
+        wp.nama_nomor as phone_name,
         auth.username,
         auth.password
         FROM wa_phone as wp
@@ -20,7 +20,7 @@ class WaModel extends CI_Model
   {
     $query = $this->db->query("
         SELECT 
-        wp.name as phone_name,
+        wp.nama_nomor as phone_name,
         wp.token
         FROM wa_phone as wp
         WHERE wp.name = '$phoneName'
@@ -43,11 +43,11 @@ class WaModel extends CI_Model
         recid,
         flag_id,
         nim,
-        phone_number,
-        variable,
-        sent_at,
-        template,
-        phone_sender_name
+        nama_template,
+        no_hp,
+        isi_variable,
+        kirim_at,
+        no_sender
         FROM wa_bulk
         WHERE flag_id = '$flag'
         AND status_code IS NULL
