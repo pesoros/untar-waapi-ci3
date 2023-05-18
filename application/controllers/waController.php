@@ -141,10 +141,37 @@ class waController extends REST_Controller
     {
         $parameters = $this->input->get();
 
+        if (
+            !isset($parameters['nama_nomor']) 
+            OR !isset($parameters['template'])
+            OR !isset($parameters['nomor_tujuan']) 
+            OR !isset($parameters['variable'])
+        ) {
+            $this->response([
+                'success' => false,
+                'message' => 'parameter tidak lengkap',
+            ], 400);
+            return;
+        }
+
+        $postData['to'] = $parameters['nomor_tujuan'];
+        $postData['type'] = 'template';
+        $postData['template']['name'] = $parameters['template'];
+        $postData['template']['language']['policy'] = 'deterministic';
+        $postData['template']['language']['code'] = 'id';
+        $postData['template']['components'][0]['type'] = 'body';
+        $bodyVariable = explode("|", $parameters['variable']);
+        foreach ($bodyVariable as $key => $value) {
+            $postData['template']['components'][0]['parameters'][$key]['type'] = 'text';
+            $postData['template']['components'][0]['parameters'][$key]['text'] = STRVAL($value);
+        }
+
+        $requestNewToken = $this->curlPostRequest('messages', $postData, $parameters['nama_nomor']);
+
         $this->response([
             'success' => true,
             'message' => 'sending message success',
-            'data' => $parameters,
+            'data' => $requestNewToken,
         ], 200);
     }
 
