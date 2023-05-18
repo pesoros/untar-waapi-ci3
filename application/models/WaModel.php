@@ -10,7 +10,7 @@ class WaModel extends CI_Model
         auth.username,
         auth.password
         FROM wa_phone as wp
-        INNER JOIN wa_phone_auth as auth
+        INNER JOIN wa_phone_auth as auth ON auth.wa_phone_recid = wp.recid
         WHERE wp.name = '$phoneName'
     ");
     return $query->row();
@@ -50,7 +50,7 @@ class WaModel extends CI_Model
         phone_sender_name
         FROM wa_bulk
         WHERE flag_id = '$flag'
-        AND status_code != '201'
+        AND status_code IS NULL
     ");
     return $query->result();
   }

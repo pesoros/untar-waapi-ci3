@@ -134,7 +134,6 @@ class waController extends REST_Controller
             'success' => true,
             'message' => 'sending otp success',
             'data' => $requestNewToken,
-            'dataraw' => $postData,
         ], 200);
     }
 
