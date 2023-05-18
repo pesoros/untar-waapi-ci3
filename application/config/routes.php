@@ -11,6 +11,7 @@ $route['single/(:any)/(:any)/(:any)']['GET'] = 'waController/single/$1/$2/$3';
 $route['bulk/(:any)']['GET'] = 'waController/bulkSending/$1';
 $route['otp/(:any)/(:any)']['GET'] = 'waController/otp/$1/$2';
 $route['single-template']['GET'] = 'waController/singleTemplate';
+$route['tes']['GET'] = 'welcome';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

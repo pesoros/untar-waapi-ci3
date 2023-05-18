@@ -31,8 +31,8 @@ class waController extends REST_Controller
 
         $data = $requestNewToken['result'];
         $saveData['token'] = $data['access_token'];
-        $saveData['token_expires_in'] = $data['expires_in'];
-        $saveData['token_updated_at'] = date("Y-m-d H:i:s");
+        // $saveData['token_expires_in'] = $data['expires_in'];
+        // $saveData['token_updated_at'] = date("Y-m-d H:i:s");
 
         $updateToken = $this->WaModel->rewriteToken($phoneName, $saveData);
 
@@ -61,12 +61,12 @@ class waController extends REST_Controller
         $getBulkData = $this->WaModel->getBulkData($flag);
         $test = [];
         foreach ($getBulkData as $key => $value) {
-            $bodyVariable = explode("|", $value->variable);
+            $bodyVariable = explode("|", $value->isi_variable);
             $postData = [];
 
-            $postData['to'] = $value->phone_number;
+            $postData['to'] = $value->no_hp;
             $postData['type'] = 'template';
-            $postData['template']['name'] = $value->template;
+            $postData['template']['name'] = $value->nama_template;
             $postData['template']['language']['policy'] = 'deterministic';
             $postData['template']['language']['code'] = 'id';
             $postData['template']['components'][0]['type'] = 'body';
@@ -115,7 +115,7 @@ class waController extends REST_Controller
         $dataToInsert['jenis'] = $category;
         $dataToInsert['created_at'] = $dateNow;
         $dataToInsert['expired_at'] = $expiredDate;
-        $dataToInsert['status_otp'] = 'WAITING';
+        $dataToInsert['status_otp'] = '0';
 
         $postData['to'] = $phoneNumber;
         $postData['type'] = 'template';

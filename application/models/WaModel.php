@@ -9,9 +9,9 @@ class WaModel extends CI_Model
         wp.nama_nomor as phone_name,
         auth.username,
         auth.password
-        FROM wa_phone as wp
-        INNER JOIN wa_phone_auth as auth ON auth.wa_phone_recid = wp.recid
-        WHERE wp.name = '$phoneName'
+        FROM wa_list_nomor as wp
+        INNER JOIN wa_list_nomor_auth as auth ON auth.nomor_recid = wp.recid
+        WHERE wp.nama_nomor = '$phoneName'
     ");
     return $query->row();
   }
@@ -22,8 +22,8 @@ class WaModel extends CI_Model
         SELECT 
         wp.nama_nomor as phone_name,
         wp.token
-        FROM wa_phone as wp
-        WHERE wp.name = '$phoneName'
+        FROM wa_list_nomor as wp
+        WHERE wp.nama_nomor = '$phoneName'
     ");
     return $query->row();
   }
@@ -31,7 +31,7 @@ class WaModel extends CI_Model
   public function rewriteToken($phoneName, $data)
   {
     $this->db->where('name', $phoneName);
-    $this->db->update('wa_phone', $data);
+    $this->db->update('wa_list_nomor', $data);
 
     return true;
   }
@@ -48,7 +48,7 @@ class WaModel extends CI_Model
         isi_variable,
         kirim_at,
         no_sender
-        FROM wa_bulk
+        FROM wa_kirim
         WHERE flag_id = '$flag'
         AND status_code IS NULL
     ");
@@ -58,14 +58,14 @@ class WaModel extends CI_Model
   public function updateBulkData($recid, $data)
   {
     $this->db->where('recid', $recid);
-    $this->db->update('wa_bulk', $data);
+    $this->db->update('wa_kirim', $data);
 
     return true;
   }
 
   public function saveOtp($data)
   {
-    $this->db->insert('otp',$data);
+    $this->db->insert('wa_otp',$data);
 
     return true;
   }
