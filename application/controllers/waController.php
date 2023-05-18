@@ -149,12 +149,12 @@ class waController extends REST_Controller
         ], 200);
     }
 
-    public function curlPostRequest($endPoint, $postData, $token = null)
+    public function curlPostRequest($endPoint, $postData, $phoneName = null)
     {
         $url = getenv('WAAPI_URL').'/'.$endPoint;
         $header[] = 'Content-Type: application/json';
-        if ($token) {
-            $getToken = $this->WaModel->getToken($token);
+        if ($phoneName) {
+            $getToken = $this->WaModel->getToken($phoneName);
             $header[] = 'Authorization: Bearer '.$getToken->token;
         }
 
