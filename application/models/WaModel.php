@@ -30,7 +30,7 @@ class WaModel extends CI_Model
 
   public function rewriteToken($phoneName, $data)
   {
-    $this->db->where('name', $phoneName);
+    $this->db->where('nama_nomor', $phoneName);
     $this->db->update('wa_list_nomor', $data);
 
     return true;
@@ -45,7 +45,7 @@ class WaModel extends CI_Model
         nim,
         nama_template,
         no_hp,
-        isi_variable,
+        isi_variabel,
         kirim_at,
         no_sender
         FROM wa_kirim

@@ -61,7 +61,7 @@ class waController extends REST_Controller
         $getBulkData = $this->WaModel->getBulkData($flag);
         $test = [];
         foreach ($getBulkData as $key => $value) {
-            $bodyVariable = explode("|", $value->isi_variable);
+            $bodyVariable = explode("|", $value->isi_variabel);
             $postData = [];
 
             $postData['to'] = $value->no_hp;
@@ -74,11 +74,10 @@ class waController extends REST_Controller
                 $postData['template']['components'][0]['parameters'][$varKey]['type'] = 'text';
                 $postData['template']['components'][0]['parameters'][$varKey]['text'] = STRVAL($varValue);
             }
-            $requestMessage = $this->curlPostRequest('messages', $postData, $value->phone_sender_name);
-            
+            $requestMessage = $this->curlPostRequest('messages', $postData, $value->no_sender);
             if ($requestMessage['statusCode'] === 401) {
-                $updateToken = $this->generateToken($phone_sender_name);
-                $requestMessage = $this->curlPostRequest('messages', $postData, $value->phone_sender_name);  
+                $updateToken = $this->generateToken($value->no_sender);
+                $requestMessage = $this->curlPostRequest('messages', $postData, $value->no_sender);  
             }
             
             $saveData['status_code'] = $requestMessage['statusCode'];
